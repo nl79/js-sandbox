@@ -22,53 +22,27 @@ class HITS {
 
   /*
    * @node - node for which to get the authority value.
-   * @k - the pass 
    */
   authority(node) {
 
     // get the nodes that point to the current node.
     let keys = Object.keys(this.sites);
-    let key;
-    let matches = [];
-    let nodes;
     let score = 0;
-
+    let key;
 
     for(let i = 0; i < keys.length; ++i) {
-      nodes = this.sites[keys[i]];
-      console.log('nodes', nodes);
-      if(nodes.find((o) => { return o === node })) {
-        score += this.hub(node);
-        console.log('node', node);
-        console.log('score', score);
-        matches.push(node);
+      key = keys[i];
+
+      if(this.sites[key].find((o) => { return o === node })) {
+        score += this.data[key].h;
       }
-
     }
-
-    // for( let key in this.sites) {
-    //   if(this.sites.hasOwnProperty(key)){
-    //     nodes = this.sites[key];
-
-    //     for(let i = 0; i < nodes.length; ++i) {
-    //       if(nodes[i] === node) {
-    //         score += this.hub(key);
-    //         matches.push(key);
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
-
-    
-
     return score;
-    
   }
 
   /*
-   *
-   */ 
+   * @node - node for which to calculate the hub value.
+   */
   hub(node) {
     // get the nodes that the current node points to.
     let nodes = this.sites[node];
@@ -79,7 +53,6 @@ class HITS {
       current = nodes[i];
       count += this.data[current].a;
     }
-
     return count;
   }
 
@@ -102,6 +75,7 @@ class HITS {
 
     for(let i = 0; i < keys.length; ++i) {
       key = keys[i];
+
       temp[key] = {
         a: this.authority(key),
         h: this.hub(key)
@@ -109,8 +83,6 @@ class HITS {
     }
 
     this.data = temp;
-
-    console.log(`pass: ${k} result: `, this.data);
   }
 
   getScores() {
@@ -128,7 +100,7 @@ const sites = {
   'g': ['a', 'b', 'c', 'f']
 };
 
-const alg = new HITS(sites)
+const alg = new HITS(sites);
 
 console.log('alg.process(6)', alg.process(6));
 
