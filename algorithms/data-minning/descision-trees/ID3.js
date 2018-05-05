@@ -9,8 +9,7 @@ class ID3 {
     this.n = 0;
 
     this.analyze();
-   
-    this.process();
+
   }
 
   // Calculate the global P, N values for the collection.
@@ -22,7 +21,7 @@ class ID3 {
 
       // Validate the classifier field exists.
       if(row[field]) {
-       
+
         // Check if the classifier value is a positive of negative class.
         //Positive classification
         if(this.positive(row[field])) {
@@ -40,7 +39,8 @@ class ID3 {
     let attributes = Object.keys(this.data[0]);
     let max = 0;
     let attribute = '';
-  
+    let values;
+
     // Process each field that is not the classification field and determine the Highet gain.
     for(let i = 0; i < attributes.length; i++) {
       let a = attributes[i];
@@ -51,22 +51,30 @@ class ID3 {
       let result = this.induce(a);
 
       console.log('result', result);
-      let keys = Object.keys(result);
-      let values = Object.values(result)
-
-      let gain = this.G(result);
+      let gain = this.G(Object.values(result));
 
       if(gain > max) {
         max = gain;
         attribute = a;
+        values = Object.keys(result);
       }
       console.log(`${a}: ${gain}`);
     }
 
     console.log('max', max);
     console.log('attribute', attribute);
+    console.log('values', values);
 
-    // Aggregate a sub-collection for each field. 
+    let tree = {};
+    let value;
+    // Aggregate a sub-collection for each field.
+    // for(let j = 0; j < values.length; ++j) {
+    //   tree[values[j]] = this.aggregate(attribute, values[j]);
+    // }
+
+
+    // Return the tree as the root and each subset
+
 
   }
 
@@ -74,18 +82,47 @@ class ID3 {
 
   }
 
+  group(field, values) {
+    let row;
+    let map = {};
+
+    // Create a map and default the keys to the values.
+    for(let j = 0; j < values.length; ++j) {
+      map[values[j]] = [];
+    }
+
+    for(let i = 0; i < this.data.length; ++i) {
+      row = this.data[i];
+
+      let temp = map[row[field]];
+
+      delete row[field];
+
+      temp.push(row)
+    }
+    return map;
+  }
+
   aggregate(field, value) {
+
+    let row;
+    let collection;
+
+    for(let i = 0; i < this.data.length; ++i) {
+      row = this.data[i];
+      console.log('row', row);
+    }
 
   }
 
   /*
-   * Generates a new collection of tuples for every unique value of 'field', and calculates 
+   * Generates a new collection of tuples for every unique value of 'field', and calculates
    * the P and N class numbers for each.
-   */ 
+   */
   induce(field) {
 
     let row, temp, map = {};
-  
+
     for(let i = 0; i < this.data.length; ++i) {
       row = this.data[i];
 
@@ -93,7 +130,7 @@ class ID3 {
 
         // Check if the map contains the particular value.
         temp = map[row[field]] || { p: 0, n: 0 };
-        
+
         // Validate the classifier field exists.
         if(row[this.classifier()]) {
 
@@ -156,7 +193,7 @@ class ID3 {
     const npn = ( n / ( p + n ) );
 
     const res = -ppn * ID3.log2(ppn) - npn * ID3.log2( npn );
-    
+
     return res;
   }
 
@@ -249,6 +286,10 @@ const config = {
 }
 
 const alg = new ID3(ID3.MapRows(headers, data), config);
+
+alg.process();
+
+console.log('aggs', alg.group('Car_Type', ['Sports', 'Sedan', 'Van']));
 
 //console.log(ID3.MapRows(headers, data));
 //console.log(alg.induce('Income'));
