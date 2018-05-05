@@ -61,6 +61,9 @@ const points = [
 let sample = new OLS(points);
 const func = sample.factory();
 
+console.log('A', sample.A());
+console.log('B', sample.B());
+
 console.log('Result: ', func(5));
 
 module.exports = {

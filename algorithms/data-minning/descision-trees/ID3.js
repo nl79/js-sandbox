@@ -1,3 +1,5 @@
+const utils = require('util');
+
 
 class ID3 {
 
@@ -35,7 +37,33 @@ class ID3 {
     }
   }
 
+  /*
+   * Check if the dataset has already been classified.
+   * IE: all values already belong to a single class.
+   */
+  isClassified() {
+    return this.p === 0 || this.n === 0;
+  }
+
+  classification() {
+    if(this.isClassified()) {
+      let p = this.p;
+      let n = this.n;
+
+      return p > n ? this.config.classifier.p : this.config.classifier.n;
+
+    } else {
+      return null;
+    }
+  }
+
   process() {
+
+    //Check if the records supplied already belong to a single class.
+    if(this.isClassified()) {
+      return this.classification();
+    }
+
     let attributes = Object.keys(this.data[0]);
     let max = 0;
     let attribute = '';
@@ -50,7 +78,6 @@ class ID3 {
 
       let result = this.induce(a);
 
-      console.log('result', result);
       let gain = this.G(Object.values(result));
 
       if(gain > max) {
@@ -58,24 +85,28 @@ class ID3 {
         attribute = a;
         values = Object.keys(result);
       }
-      console.log(`${a}: ${gain}`);
     }
 
-    console.log('max', max);
-    console.log('attribute', attribute);
-    console.log('values', values);
+    // console.log('max', max);
+    // console.log('attribute', attribute);
+    // console.log('values', values);
 
     let tree = {};
     let value;
-    // Aggregate a sub-collection for each field.
-    // for(let j = 0; j < values.length; ++j) {
-    //   tree[values[j]] = this.aggregate(attribute, values[j]);
-    // }
+    //Aggregate a sub-collection for each field.
+    //new ID3(ID3.MapRows(headers, data), config))
 
+    tree[attribute] = this.group(attribute, values);
 
     // Return the tree as the root and each subset
+    let keys = Object.keys(tree[attribute]);
+    let key;
+    for(let k = 0; k < keys.length; ++k) {
+      key = keys[k];
+      tree[attribute][key] = (new ID3(tree[attribute][key], this.config)).process();;
+    }
 
-
+    return tree;
   }
 
   iterate() {
@@ -101,18 +132,6 @@ class ID3 {
       temp.push(row)
     }
     return map;
-  }
-
-  aggregate(field, value) {
-
-    let row;
-    let collection;
-
-    for(let i = 0; i < this.data.length; ++i) {
-      row = this.data[i];
-      console.log('row', row);
-    }
-
   }
 
   /*
@@ -287,9 +306,10 @@ const config = {
 
 const alg = new ID3(ID3.MapRows(headers, data), config);
 
-alg.process();
+//alg.process();
+console.log( utils.inspect(alg.process(), true, null));
 
-console.log('aggs', alg.group('Car_Type', ['Sports', 'Sedan', 'Van']));
+//console.log('aggs', alg.group('Car_Type', ['Sports', 'Sedan', 'Van']));
 
 //console.log(ID3.MapRows(headers, data));
 //console.log(alg.induce('Income'));
